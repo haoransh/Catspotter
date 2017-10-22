@@ -3,6 +3,7 @@ import time
 import os
 import shutil
 import torch
+from PIL import Image
 
 from colorama import Fore
 
@@ -11,10 +12,6 @@ def create_save_folder(save_path, force=False, ignore_patterns=[]):
     if os.path.exists(save_path):
         print(Fore.RED + save_path + Fore.RESET
               + ' already exists!', file=sys.stderr)
-        if not force:
-            ans = input('Do you want to overwrite it? [y/N]:')
-            if ans not in ('y', 'Y', 'yes', 'Yes'):
-                os.exit(1)
         from getpass import getuser
         tmp_path = '/tmp/{}-experiments/{}_{}'.format(getuser(),
                                                       os.path.basename(save_path),
@@ -92,17 +89,21 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
 
-def error(output, target, topk=(1,)):
-    """Computes the error@k for the specified values of k"""
-    maxk = max(topk)
+def compute_score(output, target):
     batch_size = target.size(0)
+    prob = torch.sigmoid(output)
+    pred = (prob > 0.5).long() #dim = 1
+    target = target.long()
+    correct = torch.sum(torch.eq(pred, target)).data[0]
+    # total_pred = pred.numel()
+    #print('pred:{}'.format(pred.data)) #batch, 1
+    #print('target:{}'.format(target.data))
+    #b = torch.mul(torch.eq(pred, target).long(), pred)
+    tp = torch.sum(torch.mul(torch.eq(pred, target).long(), pred)).data[0]
+    fp = torch.sum(torch.mul(torch.ne(pred, target).long(), pred)).data[0]
+    tn = torch.sum(torch.mul(torch.eq(pred, target).long(), 1+(-1)*pred)).data[0]
+    fn = torch.sum(torch.mul(torch.ne(pred, target).long(), 1+(-1)*pred)).data[0]
+    # print(correct, tp, fp, tn, fn)
+    return correct, tp, fp, tn, fn
 
-    _, pred = output.topk(maxk, 1, True, True)
-    pred = pred.t()
-    correct = pred.eq(target.view(1, -1).expand_as(pred))
 
-    res = []
-    for k in topk:
-        correct_k = correct[:k].view(-1).float().sum(0)
-        res.append(100.0 - correct_k.mul_(100.0 / batch_size))
-    return res

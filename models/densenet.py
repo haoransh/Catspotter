@@ -28,11 +28,12 @@ class _DenseLayer(nn.Sequential):
         self.drop_rate = drop_rate
 
     def forward(self, x):
+        # print('dense layer input:{}'.format(x.size()))
         new_features = super(_DenseLayer, self).forward(x)
         if self.drop_rate > 0:
             new_features = F.dropout(new_features, p=self.drop_rate, training=self.training)
         return torch.cat([x, new_features], 1)
-
+        # print('dense layer output:{}'.format(new_features.size()))
 
 class _DenseBlock(nn.Sequential):
     def __init__(self, num_layers, num_input_features, bn_size, growth_rate, drop_rate):
@@ -88,18 +89,19 @@ class DenseNet(nn.Module):
         self.features.add_module('norm5', nn.BatchNorm2d(num_features))
 
         # Linear layer
-        self.classifier = nn.Linear(num_features, num_classes)
+        self.classifier = nn.Linear(108, num_classes)
 
     def forward(self, x):
         features = self.features(x)
         out = F.relu(features, inplace=True)
         out = F.avg_pool2d(out, kernel_size=self.avgpool_size).view(
             features.size(0), -1)
+        # print('size:{}'.format(out.size()))
         out = self.classifier(out)
         return out
 
 
-def createModel(data, depth=100, growth_rate=12, num_classes=10, drop_rate=0,
+def createModel(data, depth=7, growth_rate=12, num_classes=2, drop_rate=0,
                 num_init_features=24, compression=0.5, bn_size=4, **kwargs):
     assert (depth - 4) % 3 == 0, 'depth should be one of 3N+4'
     avgpool_size = 7 if data == 'imagenet' else 8

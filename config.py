@@ -17,4 +17,8 @@ datasets = {
         'num_classes': 100,
         'augmentation': True,
     },
+    'cata': {
+        'num_classes': 1,
+        'augmentation': True,
+    }
 }

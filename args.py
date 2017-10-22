@@ -34,18 +34,18 @@ exp_group.add_argument('--seed', default=0, type=int,
 
 # dataset related
 data_group = arg_parser.add_argument_group('data', 'dataset setting')
-data_group.add_argument('--data', metavar='D', default='cifar10',
+data_group.add_argument('--data', metavar='D', default='catadata',
                         choices=config.datasets.keys(),
                         help='datasets: ' +
                         ' | '.join(config.datasets.keys()) +
-                        ' (default: cifar10)')
+                        ' (default: catadata)')
 data_group.add_argument('--no_valid', action='store_false', dest='use_validset',
                         help='not hold out 10 percent of training data as validation')
-data_group.add_argument('--data_root', metavar='DIR', default='data',
+data_group.add_argument('--data_root', metavar='DIR', default='data/cata',
                         help='path to dataset (default: data)')
-data_group.add_argument('-j', '--workers', dest='num_workers', default=4,
+data_group.add_argument('-j', '--workers', dest='num_workers', default=1,
                         type=int, metavar='N',
-                        help='number of data loading workers (default: 4)')
+                        help='number of data loading workers (default: 1)')
 data_group.add_argument('--normalized', action='store_true',
                         help='normalize the data into zero mean and unit std')
 
@@ -57,7 +57,7 @@ arch_group.add_argument('--arch', '-a', metavar='ARCH', default='resnet',
                         help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet)')
-arch_group.add_argument('-d', '--depth', default=56, type=int, metavar='D',
+arch_group.add_argument('-d', '--depth', default=3, type=int, metavar='D',
                         help='depth (default=56)')
 arch_group.add_argument('--drop-rate', default=0.0, type=float,
                         metavar='DROPRATE', help='dropout rate (default: 0.2)')
@@ -92,7 +92,7 @@ optim_group.add_argument('--start-epoch', default=1, type=int, metavar='N',
 optim_group.add_argument('--patience', default=0, type=int, metavar='N',
                          help='patience for early stopping'
                          '(0 means no early stopping)')
-optim_group.add_argument('-b', '--batch-size', default=64, type=int,
+optim_group.add_argument('-b', '--batch-size', default=4, type=int,
                          metavar='N', help='mini-batch size (default: 64)')
 optim_group.add_argument('--optimizer', default='sgd',
                          choices=['sgd', 'rmsprop', 'adam'], metavar='N',
