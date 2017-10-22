@@ -84,10 +84,8 @@ class DenseNet(nn.Module):
                                                             * compression))
                 self.features.add_module('transition%d' % (i + 1), trans)
                 num_features = int(num_features * compression)
-
         # Final batch norm
         self.features.add_module('norm5', nn.BatchNorm2d(num_features))
-
         # Linear layer
         self.classifier = nn.Linear(108, num_classes)
 

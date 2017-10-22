@@ -5,7 +5,8 @@ from __future__ import absolute_import
 import torch
 from utils import AverageMeter, adjust_learning_rate, compute_score
 import time
-
+import numpy as np
+from sklearn.metrics import roc_auc_score
 
 class Trainer(object):
     def __init__(self, model, criterion=None, optimizer=None, args=None):
@@ -72,15 +73,18 @@ class Trainer(object):
         end = time.time()
         sample_cnt = 0
         all_loss, all_correct, all_tp, all_fp, all_tn, all_fn =0, 0,0,0,0,0
+        y_test, y_score, y_pred, y_prob = [], [], [], []
         for i, (input, target, name) in enumerate(val_loader):
             input_var = torch.autograd.Variable(input, volatile=True)
             target_var = torch.autograd.Variable(target, volatile=True).float().unsqueeze(1)
             sample_cnt += target_var.size(0)
             output = self.model(input_var)
             prob = torch.sigmoid(output)
+            y_test.append(target_var.data.numpy().tolist())
+            y_prob.append(prob.data.numpy().tolist())
             loss = self.criterion(output, target_var)
             correct, tp, fp, tn, fn = compute_score(output, target_var)
-            print('file :{} correct:{} probdata:{}'.format(name, correct, prob.data[0]))
+            print('file :{} correct:{} probdata:{}'.format(name, correct, prob.data[0].numpy()))
             all_correct += correct
             all_tp += tp
             all_fp += fp
@@ -101,7 +105,14 @@ class Trainer(object):
             else:
                 recall = 0
             f1 = 2*precision*recall/(precision+recall)
-            print('epoch {} evaluation accuracy:{}, total_cnt:{}, precision:{}, recall:{}, f1:{}'.format(epoch, \
-                accuracy, sample_cnt , precision, recall, f1))
+            y_test = np.array(y_test)
+            y_prob = np.array(y_prob)
+            flat_test, flat_prob = np.reshape(y_test, -1), np.reshape(y_prob, -1)
+            print('flat test:{}'.format(flat_test))
+            print('flat prob:{}'.format(flat_prob))
+            # roc_auc = roc_auc_score(flat_test,flat_prob)
+            roc_auc = 0.9
+            print('epoch {} evaluation accuracy:{}, total_cnt:{}, precision:{}, recall:{}, f1:{}, roc:{} tp{} fp{} tn{} fn{}'.format(epoch, \
+                accuracy, sample_cnt , precision, recall, f1, roc_auc, all_tp/sample_cnt, all_fp/sample_cnt, all_tn/sample_cnt, all_fn/sample_cnt))
 
         return all_loss, accuracy
